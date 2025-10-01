@@ -12,12 +12,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
-public class PaymentService {
-    /*
-        prepare 메서드
-        이 메서드는 "결제를 준비한다" 라는 행동을 하는 함수
-        환율을 가져오고 계산해서, 최종적으로 새로운 Payment 객체를 만들어서 반환함
-     */
+abstract public class PaymentService {
     public Payment prepare(Long orderId, String currency, BigDecimal foreignCurrencyAmount) throws IOException {
         BigDecimal exRate = getExRate(currency);
         BigDecimal convertedAmount = foreignCurrencyAmount.multiply(exRate);
@@ -26,34 +21,14 @@ public class PaymentService {
         return new Payment(orderId, currency, foreignCurrencyAmount, exRate, convertedAmount, validUntil);
     }
 
-    private BigDecimal getExRate(String currency) throws IOException {
-        URL url = new URL("https://open.er-api.com/v6/latest/USD" + currency);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String response = br.lines().collect(Collectors.joining());
-        br.close();
-
-        ObjectMapper mapper = new ObjectMapper();
-        ExRateData data = mapper.readValue(response, ExRateData.class);
-        BigDecimal exRate = data.rates().get("KRW");
-        return exRate;
-    }
-
-    public static void main(String[] args) throws IOException {
-        PaymentService paymentService = new PaymentService();
-        Payment payment = paymentService.prepare(100L, "USD", BigDecimal.valueOf(50.7));
-        System.out.println(payment);
-    }
+    abstract BigDecimal getExRate(String currency) throws IOException;
 }
 
-/*
-    PaymentService는 Payment라는 상품을 만들어내는 공장이고
-    prepare는 그 공장에서 제품을 조립하는 메서드
-    Payment는 최종적으로 완성된 제품(데이터 묶음)이 된다.
 
-    === 흐름 정리 ===
-    main에서 prepare 호출
-    100L, "USD" 매개변수 값을 넘긴다.
-    새로운 Payment 객체를 생성한다.
-    최종적으로 Payment 객체를 받아서 System.out.println으로 출력한다.
+/*
+    결제 준비 로직(prepare)은 공통으로 제공
+    하지만 환율 조회(getExRate) 부분은 구체적으로 어떻게 가져올지는 정하지 않고 추상 메서드로 열어둠.
+    즉, 템플릿 메서드 패턴처럼 동작:
+    - 큰 틀은 정해져 있고 (prepare)
+    - 세부 구현은 하위 클래스가 오버라이드해서 채움 (getExRate)
  */
