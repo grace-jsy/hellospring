@@ -3,6 +3,10 @@ package gracespring.hellospring;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/*
+    그냥 값들을 보관하는 역할
+    결제 결과(주문 ID, 통화, 환율, 변환된 금액, 유효시간 등)를 담는 데이터 상자(모델 클래스)
+ */
 public class Payment {
 
     private Long orderId;
